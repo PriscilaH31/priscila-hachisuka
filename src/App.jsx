@@ -1,5 +1,6 @@
 import React from "react";
+import AppRoutes from "./routes/AppRoutes";
 
 export default function App() {
-  return <h1>Olá, React + Vite!</h1>;
+  return <AppRoutes />;
 }
