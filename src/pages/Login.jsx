@@ -1,11 +1,13 @@
 import React from "react";
 import LoginForm from "../components/LoginForm.jsx";
+import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
 
 export default function Login() {
+  const navigate = useNavigate();
   const handleLogin = (email, password) => {
     if (email === "admin@email.com" && password === "123456") {
-      alert("Login realizado!");
+      navigate("/gerenciamento");
     } else {
       alert("Credenciais inválidas");
     }

@@ -5,19 +5,18 @@ export default function LoginForm({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const submitLogin = (e) => {
     e.preventDefault();
     onLogin(email, password);
   };
 
   return (
     <div className="login-container">
-      {/* FORMULÁRIO do lado esquerdo */}
       <div className="login-form-section">
         <div className="login-box">
           <h3>Bem-vindo!</h3>
           <h2>Acesso a Conta</h2>
-          <form onSubmit={handleSubmit} className="login-form">
+          <form onSubmit={submitLogin} className="login-form">
             <input
               type="email"
               placeholder="E-mail"
