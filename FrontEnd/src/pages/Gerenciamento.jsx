@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import "../styles/gerenciamento.css";
 import { data } from "react-router-dom";
+import api from "../apiFront";
+import { useEffect } from "react";
 
 const tiposMaquina = ["Bomba", "Ventilador"];
 
@@ -43,22 +45,35 @@ export default function Gerenciamento() {
     setModalAberto(true);
   };
 
-  const salvarMaquina = (e) => {
+  useEffect(() => {
+    api
+      .get("/maquinas")
+      .then((res) => setMaquinas(res.data))
+      .catch((err) => console.error("Erro ao buscar máquinas:", err));
+  }, []);
+
+  const salvarMaquina = async (e) => {
     e.preventDefault();
-    if (modoEdicao) {
-      setMaquinas(
-        maquinas.map((m) =>
-          m.id === modoEdicao ? { ...form, id: modoEdicao } : m
-        )
-      );
-    } else {
-      setMaquinas([...maquinas, { ...form, id: Date.now() }]);
+
+    try {
+      if (modoEdicao) {
+        await api.put(`/maquinas/${modoEdicao}`, form);
+      } else {
+        await api.post("/maquinas", form);
+      }
+
+      const res = await api.get("/maquinas");
+      setMaquinas(res.data);
+      setModalAberto(false);
+    } catch (err) {
+      console.error("Erro ao salvar máquina:", err);
     }
-    setModalAberto(false);
   };
 
-  const excluirMaquina = (id) => {
-    setMaquinas(maquinas.filter((m) => m.id !== id));
+  const excluirMaquina = async (id) => {
+    await api.delete(`/maquinas/${id}`);
+    const res = await api.get("/maquinas");
+    setMaquinas(res.data);
   };
 
   return (
