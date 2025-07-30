@@ -1,11 +1,13 @@
-// src/pages/Gerenciamento.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/gerenciamento.css";
-import { data } from "react-router-dom";
-import api from "../apiFront";
-import { useEffect } from "react";
+import api from "../services/api";
 
 const tiposMaquina = ["Bomba", "Ventilador"];
+const sensorMaquina = [
+  "Sensor de Temperatura",
+  "Sensor de Pressão",
+  "Sensor de Umidade",
+];
 
 export default function Gerenciamento() {
   const [maquinas, setMaquinas] = useState([]);
@@ -16,24 +18,33 @@ export default function Gerenciamento() {
     dataFinal: "",
   });
   const [modalAberto, setModalAberto] = useState(false);
-  const [form, setForm] = useState({ nome: "", data: "", tipo: "" });
+  const [form, setForm] = useState({
+    nome: "",
+    data: "",
+    tipo: "",
+    sensor: "",
+  });
   const [modoEdicao, setModoEdicao] = useState(null);
-  const sensorMaquina = [
-    "Sensor de Temperatura",
-    "Sensor de Pressão",
-    "Sensor de Umidade",
-  ];
 
   const filtrarMaquinas = () => {
-    return maquinas.filter(
-      (m) =>
-        m.nome.toLowerCase().includes(filtro.nome.toLowerCase()) &&
-        (filtro.tipo === "" || m.tipo === filtro.tipo)
-    );
+    if (!Array.isArray(maquinas)) return [];
+
+    return maquinas.filter((m) => {
+      const nomeMatch = m.nome
+        ?.toLowerCase()
+        .includes(filtro.nome.toLowerCase());
+      const tipoMatch = filtro.tipo === "" || m.tipo === filtro.tipo;
+      const dataMatch =
+        (!filtro.dataInicial ||
+          new Date(m.data) >= new Date(filtro.dataInicial)) &&
+        (!filtro.dataFinal || new Date(m.data) <= new Date(filtro.dataFinal));
+
+      return nomeMatch && tipoMatch && dataMatch;
+    });
   };
 
   const abrirModal = (maquina = null) => {
-    setModoEdicao(maquina?.id || null);
+    setModoEdicao(maquina?._id || null);
     setForm(
       maquina || {
         nome: "",
@@ -48,7 +59,15 @@ export default function Gerenciamento() {
   useEffect(() => {
     api
       .get("/maquinas")
-      .then((res) => setMaquinas(res.data))
+      .then((res) => {
+        console.log("Resposta da API:", res.data);
+        if (Array.isArray(res.data)) {
+          setMaquinas(res.data);
+        } else {
+          console.error("Resposta inesperada:", res.data);
+          setMaquinas([]);
+        }
+      })
       .catch((err) => console.error("Erro ao buscar máquinas:", err));
   }, []);
 
@@ -79,6 +98,7 @@ export default function Gerenciamento() {
   return (
     <div className="gerenciamento-container">
       <h2>GESTÃO DE MÁQUINA</h2>
+
       <div className="filtros">
         <input
           type="text"
@@ -99,7 +119,6 @@ export default function Gerenciamento() {
           ))}
         </select>
 
-        {/* Campo de Data Inicial */}
         <input
           type="date"
           value={filtro.dataInicial || ""}
@@ -108,7 +127,6 @@ export default function Gerenciamento() {
           }
         />
 
-        {/* Campo de Data Final */}
         <input
           type="date"
           value={filtro.dataFinal || ""}
@@ -136,7 +154,7 @@ export default function Gerenciamento() {
           </thead>
           <tbody>
             {filtrarMaquinas().map((m) => (
-              <tr key={m.id}>
+              <tr key={m._id}>
                 <td>{m.nome}</td>
                 <td>{m.data}</td>
                 <td>{m.tipo}</td>
@@ -149,7 +167,9 @@ export default function Gerenciamento() {
                         ? "amarelo"
                         : "vermelho"
                     }`}
-                  ></span>
+                  >
+                    {m.sensor}
+                  </span>
                 </td>
                 <td>
                   <button onClick={() => abrirModal(m)} className="editar">
@@ -158,7 +178,7 @@ export default function Gerenciamento() {
                 </td>
                 <td>
                   <button
-                    onClick={() => excluirMaquina(m.id)}
+                    onClick={() => excluirMaquina(m._id)}
                     className="excluir"
                   >
                     ❌
