@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import meuVideo from "../assets/meu-video.mp4";
+import { Link } from "react-router-dom";
 
 export default function LoginForm({ onLogin }) {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [senha, setSenha] = useState("");
 
-  const submitLogin = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    onLogin(email, password);
+    onLogin(email, senha);
   };
 
   return (
@@ -15,33 +16,39 @@ export default function LoginForm({ onLogin }) {
       <div className="login-form-section">
         <div className="login-box">
           <h3>Bem-vindo!</h3>
-          <h2>Acesso a Conta</h2>
-          <form onSubmit={submitLogin} className="login-form">
-            <input
-              type="email"
-              placeholder="E-mail"
-              className="login-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Senha"
-              className="login-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <h2>Acesso à Conta</h2>
+          <form onSubmit={handleSubmit} className="login-form">
+            <label>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="login-input"
+              />
+            </label>
+            <label>
+              <input
+                type="password"
+                placeholder="Senha"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                className="login-input"
+              />
+            </label>
             <button type="submit" className="login-button">
               Entrar
             </button>
-            <h1>Esqueci minha senha</h1>
+            {/* <Link to="/cadastrar" className="esqueci-senha">
+              Cadastrar Usuário
+            </Link>
+            <p className="esqueci-senha">Esqueci minha senha</p> */}
           </form>
         </div>
       </div>
 
-      {/* VÍDEO no lado direito */}
       <div className="login-video-section">
         <video
           src={meuVideo}

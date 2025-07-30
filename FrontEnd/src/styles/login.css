@@ -1,11 +1,9 @@
-/* Container principal da tela de login */
 .login-container {
   display: flex;
   height: 100vh;
   background-color: #46142e;
 }
 
-/* Seção esquerda: formulário */
 .login-form-section {
   flex: 1;
   display: flex;
@@ -15,7 +13,6 @@
   background-color: #46142e;
 }
 
-/* Box do formulário */
 .login-box {
   width: 100%;
   max-width: 400px;
@@ -48,6 +45,7 @@
   margin-bottom: 15px;
   border-radius: 4px;
   color: #0d0303;
+  width: 300px;
 }
 
 .login-button {
@@ -58,6 +56,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  width: 325px;
 }
 
 .login-button:hover {
