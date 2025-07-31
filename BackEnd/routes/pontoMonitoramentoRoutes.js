@@ -8,9 +8,9 @@ import {
 
 const router = express.Router();
 
-router.post("/pontos", criarPonto);
-router.get("/pontos", listarPontos);
-router.delete("/pontos/:id", excluirPonto);
-router.put("/pontos/:id", atualizarPonto);
+router.post("/", criarPonto); // POST /api/pontos-monitoramento
+router.get("/", listarPontos); // GET /api/pontos-monitoramento
+router.delete("/:id", excluirPonto); // DELETE /api/pontos-monitoramento/:id
+router.put("/:id", atualizarPonto); // PUT /api/pontos-monitoramento/:id
 
 export default router;

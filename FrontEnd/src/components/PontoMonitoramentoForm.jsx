@@ -9,14 +9,19 @@ export default function PontoMonitoramentoForm({ onClose, onSaved }) {
   const [maquinaId, setMaquinaId] = useState("");
   const [maquinas, setMaquinas] = useState([]);
   const [erro, setErro] = useState("");
+  const [temperatura, setTemperatura] = useState(0);
 
-  // Para mostrar tipo da máquina selecionada
   const maquinaSelecionada = maquinas.find((m) => m._id === maquinaId);
 
   useEffect(() => {
     async function buscarMaquinas() {
-      const res = await api.get("/maquinas");
-      setMaquinas(res.data);
+      try {
+        const res = await api.get("/maquinas");
+        console.log("Máquinas carregadas:", res.data);
+        setMaquinas(res.data);
+      } catch (error) {
+        console.error("Erro ao buscar máquinas:", error);
+      }
     }
     buscarMaquinas();
   }, []);
@@ -41,10 +46,11 @@ export default function PontoMonitoramentoForm({ onClose, onSaved }) {
     }
 
     try {
-      await api.post("/pontos", {
-        nome,
+      await api.post("/pontos-monitoramento", {
+        nome: nome,
         sensor: { modelo: sensorModelo },
-        maquinaId,
+        maquinaId: maquinaId,
+        temperatura: Number(temperatura),
       });
       onSaved();
     } catch (err) {
@@ -82,6 +88,18 @@ export default function PontoMonitoramentoForm({ onClose, onSaved }) {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>Temperatura (°C):</label>
+            <input
+              type="number"
+              value={temperatura}
+              onChange={(e) => setTemperatura(e.target.value)}
+              min="0"
+              max="150"
+              required
+            />
           </div>
 
           <div className="form-group">

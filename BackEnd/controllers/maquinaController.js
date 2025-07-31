@@ -1,8 +1,9 @@
 import Maquina from "../models/Maquina.js";
 
+// Listar máquinas do usuário logado
 export const listarMaquinas = async (req, res) => {
   try {
-    const filtro = {};
+    const filtro = { usuario: req.user._id }; // Apenas as máquinas do usuário
     const { nome, tipo, dataInicial, dataFinal } = req.query;
 
     if (nome) filtro.nome = new RegExp(nome, "i");
@@ -13,16 +14,24 @@ export const listarMaquinas = async (req, res) => {
       if (dataFinal) filtro.data.$lte = new Date(dataFinal);
     }
 
-    const maquinas = await Maquina.find(filtro);
+    const maquinas = await Maquina.find(filtro).populate(
+      "pontos",
+      "nome sensor temperatura"
+    );
     res.json(maquinas);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// Criar máquina vinculada ao usuário
 export const criarMaquina = async (req, res) => {
   try {
-    const nova = new Maquina(req.body);
+    const nova = new Maquina({
+      ...req.body,
+      usuario: req.user._id, // ✅ Correto agora
+    });
+
     const salva = await nova.save();
     res.status(201).json(salva);
   } catch (err) {
@@ -30,22 +39,39 @@ export const criarMaquina = async (req, res) => {
   }
 };
 
+// Atualizar máquina do usuário logado
 export const atualizarMaquina = async (req, res) => {
   try {
-    const atualizada = await Maquina.findByIdAndUpdate(
-      req.params.id,
+    const atualizada = await Maquina.findOneAndUpdate(
+      { _id: req.params.id, usuarioId: req.usuario._id }, // garante que é dele
       req.body,
       { new: true }
     );
+
+    if (!atualizada)
+      return res
+        .status(404)
+        .json({ msg: "Máquina não encontrada ou sem permissão" });
+
     res.json(atualizada);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
+// Deletar máquina do usuário logado
 export const deletarMaquina = async (req, res) => {
   try {
-    await Maquina.findByIdAndDelete(req.params.id);
+    const deletada = await Maquina.findOneAndDelete({
+      _id: req.params.id,
+      usuarioId: req.usuario._id,
+    });
+
+    if (!deletada)
+      return res
+        .status(404)
+        .json({ msg: "Máquina não encontrada ou sem permissão" });
+
     res.json({ mensagem: "Máquina deletada com sucesso" });
   } catch (err) {
     res.status(500).json({ error: err.message });

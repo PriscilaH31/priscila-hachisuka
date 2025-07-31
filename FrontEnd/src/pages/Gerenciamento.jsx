@@ -2,11 +2,25 @@ import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import "../styles/gerenciamento.css";
 import PontoMonitoramentoForm from "../components/PontoMonitoramentoForm";
+import { useNavigate } from "react-router-dom";
 
-const tiposMaquina = ["Bomba", "Ventilador"];
+const tiposMaquina = ["Bomba", "Ventilador", "Maquina de Lavar"];
 const sensoresMaquina = ["TcAg", "TcAs", "HF+", "HF-"];
 
+const corTemperatura = (temp) => {
+  if (temp >= 80) return "#f00"; // Vermelho
+  if (temp >= 60) return "#ffa500"; // Laranja
+  if (temp >= 40) return "#ff0"; // Amarelo
+  return "#0f0"; // Verde
+};
+
 export default function Gerenciamento() {
+  const navigate = useNavigate();
+  const logout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
+
   const [maquinas, setMaquinas] = useState([]);
   const [filtro, setFiltro] = useState({
     nome: "",
@@ -21,9 +35,12 @@ export default function Gerenciamento() {
     data: new Date().toISOString().slice(0, 10),
     tipo: "",
     sensor: "",
+    pontos: [],
+    temperatura: 0,
   });
   const [erro, setErro] = useState(null);
-
+  const [modalPontoAberta, setModalPontoAberta] = useState(false);
+  const [maquinaSelecionada, setMaquinaSelecionada] = useState(null);
   const buscarMaquinas = async () => {
     try {
       const params = {};
@@ -37,7 +54,7 @@ export default function Gerenciamento() {
       setErro(null);
     } catch (error) {
       setErro("Erro ao buscar máquinas.");
-      console.error(error);
+      console.error(error.response?.data || error.message);
     }
   };
 
@@ -50,9 +67,12 @@ export default function Gerenciamento() {
       setModoEdicao(maquina._id);
       setForm({
         nome: maquina.nome,
-        data: maquina.data.slice(0, 10),
+        data: maquina.data
+          ? maquina.data.slice(0, 10)
+          : new Date().toISOString().slice(0, 10),
         tipo: maquina.tipo,
         sensor: maquina.sensor,
+        pontos: maquina.pontos || [],
       });
     } else {
       setModoEdicao(null);
@@ -61,6 +81,7 @@ export default function Gerenciamento() {
         data: new Date().toISOString().slice(0, 10),
         tipo: "",
         sensor: "",
+        pontos: [],
       });
     }
     setModalAberto(true);
@@ -69,7 +90,7 @@ export default function Gerenciamento() {
 
   const salvarMaquina = async (e) => {
     e.preventDefault();
-
+    console.log("Dados enviados:", form);
     try {
       if (modoEdicao) {
         await api.put(`/maquinas/${modoEdicao}`, form);
@@ -80,7 +101,7 @@ export default function Gerenciamento() {
       buscarMaquinas();
     } catch (error) {
       setErro("Erro ao salvar máquina.");
-      console.error(error);
+      console.error(error.response?.data || error.message);
     }
   };
 
@@ -95,13 +116,14 @@ export default function Gerenciamento() {
     }
   };
 
-  const [modalPontoAberta, setModalPontoAberta] = useState(false);
-  const [maquinaSelecionada, setMaquinaSelecionada] = useState(null);
-
   return (
     <div className="gerenciamento-container">
       <h2>Gestão de Máquina</h2>
-
+      <div className="logout-container">
+        <button className="logout" onClick={logout}>
+          Logout
+        </button>
+      </div>
       {/* Filtros */}
       <div className="filtros">
         <input
@@ -145,7 +167,7 @@ export default function Gerenciamento() {
         <button
           onClick={() => {
             setModalPontoAberta(true);
-            setMaquinaSelecionada(null); // ponto avulso sem máquina
+            setMaquinaSelecionada(null);
           }}
           style={{ marginLeft: "10px", background: "#44c", color: "#fff" }}
         >
@@ -177,12 +199,48 @@ export default function Gerenciamento() {
             {maquinas.map((m) => (
               <tr key={m._id}>
                 <td>{m.nome}</td>
-                <td>{new Date(m.data).toLocaleDateString()}</td>
+                <td>{new Date(m.data).toLocaleDateString("pt-BR")}</td>
                 <td>{m.tipo}</td>
                 <td>{m.sensor}</td>
-                <td>{m.pontos?.map((p) => p.nome).join(", ") || "—"}</td>
                 <td>
-                  <button onClick={() => abrirModal(m)} className="editar">
+                  {m.pontos?.map((p, i) => (
+                    <div
+                      key={p._id || i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center", // vertical center
+                        justifyContent: "center", // horizontal center
+                        marginBottom: 6,
+                      }}
+                    >
+                      <span>{p.nome}</span>
+                      <span
+                        style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: "50%",
+                          backgroundColor: corTemperatura(p.temperatura ?? 0),
+                          marginLeft: 8,
+                          border: "1px solid #000",
+                          display: "inline-block",
+                          // alignItems não faz efeito aqui porque span não é flex container
+                        }}
+                      />
+                      <span style={{ marginLeft: 8 }}>
+                        {typeof p.temperatura === "number"
+                          ? `${p.temperatura}°C`
+                          : "0°C"}
+                      </span>
+                    </div>
+                  ))}
+                </td>
+
+                <td>
+                  <button
+                    onClick={() => abrirModal(m)}
+                    className="editar"
+                    aria-label={`Editar máquina ${m.nome}`}
+                  >
                     ✏️
                   </button>
                 </td>
@@ -190,6 +248,7 @@ export default function Gerenciamento() {
                   <button
                     onClick={() => excluirMaquina(m._id)}
                     className="excluir"
+                    aria-label={`Excluir máquina ${m.nome}`}
                   >
                     ❌
                   </button>
@@ -201,7 +260,7 @@ export default function Gerenciamento() {
       </div>
 
       {modalAberto && (
-        <div className="modal">
+        <div className="modal" role="dialog" aria-modal="true">
           <div className="modal-content">
             <h3>{modoEdicao ? "Editar Máquina" : "Cadastrar Máquina"}</h3>
 
@@ -276,10 +335,14 @@ export default function Gerenciamento() {
           onClose={() => setModalPontoAberta(false)}
           onSaved={() => {
             setModalPontoAberta(false);
-            buscarMaquinas(); // Atualiza a lista com pontos novos
+            buscarMaquinas();
           }}
         />
       )}
+
+      {/* <PontoMonitoramentoDemo /> */}
+
+      {/* <TemperaturaPorMaquina /> */}
     </div>
   );
 }

@@ -41,10 +41,19 @@ export default function LoginForm({ onLogin }) {
             <button type="submit" className="login-button">
               Entrar
             </button>
-            {/* <Link to="/cadastrar" className="esqueci-senha">
-              Cadastrar Usuário
-            </Link>
-            <p className="esqueci-senha">Esqueci minha senha</p> */}
+            <p style={{ marginTop: 20 }}>
+              Não tem conta?{" "}
+              <span
+                style={{
+                  color: "#0073e6",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+                onClick={() => navigate("/cadastro")}
+              >
+                Cadastre-se
+              </span>
+            </p>
           </form>
         </div>
       </div>

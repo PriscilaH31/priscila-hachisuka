@@ -1,4 +1,4 @@
-// routes/authRoutes.js
+// routes/login.js
 import express from "express";
 import {
   registrarUsuario,
@@ -7,7 +7,7 @@ import {
 
 const router = express.Router();
 
-router.post("/register", registrarUsuario);
-router.post("/login", loginUsuario);
+router.post("/registro", registrarUsuario);
+router.post("/", loginUsuario);
 
 export default router;

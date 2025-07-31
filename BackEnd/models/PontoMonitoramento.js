@@ -1,4 +1,3 @@
-// models/PontoMonitoramento.js
 import mongoose from "mongoose";
 
 const pontoMonitoramentoSchema = new mongoose.Schema({
@@ -11,10 +10,16 @@ const pontoMonitoramentoSchema = new mongoose.Schema({
     },
     id: { type: String, required: true, unique: true },
   },
+
   maquinaId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Maquina",
     required: true,
+  },
+
+  temperatura: {
+    type: Number,
+    default: 0,
   },
 });
 
