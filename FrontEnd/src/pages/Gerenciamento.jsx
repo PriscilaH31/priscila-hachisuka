@@ -8,10 +8,10 @@ const tiposMaquina = ["Bomba", "Ventilador", "Maquina de Lavar"];
 const sensoresMaquina = ["TcAg", "TcAs", "HF+", "HF-"];
 
 const corTemperatura = (temp) => {
-  if (temp >= 80) return "#f00"; // Vermelho
-  if (temp >= 60) return "#ffa500"; // Laranja
-  if (temp >= 40) return "#ff0"; // Amarelo
-  return "#0f0"; // Verde
+  if (temp >= 80) return "#f00";
+  if (temp >= 60) return "#ffa500";
+  if (temp >= 40) return "#ff0";
+  return "#0f0";
 };
 
 export default function Gerenciamento() {
@@ -41,6 +41,17 @@ export default function Gerenciamento() {
   const [erro, setErro] = useState(null);
   const [modalPontoAberta, setModalPontoAberta] = useState(false);
   const [maquinaSelecionada, setMaquinaSelecionada] = useState(null);
+
+  // 📄 Paginação
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 5;
+
+  const totalPaginas = Math.ceil(maquinas.length / itensPorPagina);
+  const maquinasPaginadas = maquinas.slice(
+    (paginaAtual - 1) * itensPorPagina,
+    paginaAtual * itensPorPagina
+  );
+
   const buscarMaquinas = async () => {
     try {
       const params = {};
@@ -52,6 +63,7 @@ export default function Gerenciamento() {
       const res = await api.get("/maquinas", { params });
       setMaquinas(res.data);
       setErro(null);
+      setPaginaAtual(1); // 🔄 Resetar para primeira página ao buscar
     } catch (error) {
       setErro("Erro ao buscar máquinas.");
       console.error(error.response?.data || error.message);
@@ -90,7 +102,6 @@ export default function Gerenciamento() {
 
   const salvarMaquina = async (e) => {
     e.preventDefault();
-    console.log("Dados enviados:", form);
     try {
       if (modoEdicao) {
         await api.put(`/maquinas/${modoEdicao}`, form);
@@ -124,6 +135,7 @@ export default function Gerenciamento() {
           Logout
         </button>
       </div>
+
       {/* Filtros */}
       <div className="filtros">
         <input
@@ -132,7 +144,6 @@ export default function Gerenciamento() {
           value={filtro.nome}
           onChange={(e) => setFiltro({ ...filtro, nome: e.target.value })}
         />
-
         <select
           value={filtro.tipo}
           onChange={(e) => setFiltro({ ...filtro, tipo: e.target.value })}
@@ -144,7 +155,6 @@ export default function Gerenciamento() {
             </option>
           ))}
         </select>
-
         <input
           type="date"
           value={filtro.dataInicial}
@@ -152,24 +162,26 @@ export default function Gerenciamento() {
             setFiltro({ ...filtro, dataInicial: e.target.value })
           }
         />
-
         <input
           type="date"
           value={filtro.dataFinal}
           onChange={(e) => setFiltro({ ...filtro, dataFinal: e.target.value })}
         />
-
-        <button onClick={buscarMaquinas}>Pesquisar</button>
+        <button className="btn secundario" onClick={buscarMaquinas}>
+          Pesquisar
+        </button>
       </div>
 
       <div className="btn-wrapper">
-        <button onClick={() => abrirModal()}>Cadastrar Máquina</button>
+        <button className="btn primario" onClick={() => abrirModal()}>
+          Cadastrar Máquina
+        </button>
         <button
           onClick={() => {
             setModalPontoAberta(true);
             setMaquinaSelecionada(null);
           }}
-          style={{ marginLeft: "10px", background: "#44c", color: "#fff" }}
+          style={{ marginLeft: "10px", background: "#0055aa", color: "white" }}
         >
           Cadastrar Ponto de Monitoramento
         </button>
@@ -191,7 +203,7 @@ export default function Gerenciamento() {
             </tr>
           </thead>
           <tbody>
-            {maquinas.flatMap((m) =>
+            {maquinasPaginadas.flatMap((m) =>
               m.pontos && m.pontos.length > 0 ? (
                 m.pontos.map((p, i) => {
                   const valor =
@@ -224,19 +236,17 @@ export default function Gerenciamento() {
                               backgroundColor: corTemperatura(valor),
                               marginLeft: 8,
                               border: "1px solid #000",
-                              display: "inline-block",
                             }}
                           />
-                          <span
-                            style={{ marginLeft: 8 }}
-                          >{`${valor} ${unidade}`}</span>
+                          <span style={{ marginLeft: 8 }}>
+                            {valor} {unidade}
+                          </span>
                         </div>
                       </td>
                       <td>
                         <button
                           onClick={() => abrirModal(m)}
                           className="editar"
-                          aria-label={`Editar máquina ${m.nome}`}
                         >
                           ✏️
                         </button>
@@ -245,7 +255,6 @@ export default function Gerenciamento() {
                         <button
                           onClick={() => excluirMaquina(m._id)}
                           className="excluir"
-                          aria-label={`Excluir máquina ${m.nome}`}
                         >
                           ❌
                         </button>
@@ -278,13 +287,31 @@ export default function Gerenciamento() {
             )}
           </tbody>
         </table>
+
+        {/* 🔽 Paginação */}
+        <div className="paginacao">
+          <button
+            onClick={() => setPaginaAtual((p) => Math.max(p - 1, 1))}
+            disabled={paginaAtual === 1}
+          >
+            Anterior
+          </button>
+          <span style={{ margin: "0 12px" }}>
+            Página {paginaAtual} de {totalPaginas}
+          </span>
+          <button
+            onClick={() => setPaginaAtual((p) => Math.min(p + 1, totalPaginas))}
+            disabled={paginaAtual === totalPaginas || totalPaginas === 0}
+          >
+            Próxima
+          </button>
+        </div>
       </div>
 
       {modalAberto && (
-        <div className="modal" role="dialog" aria-modal="true">
+        <div className="modal">
           <div className="modal-content">
             <h3>{modoEdicao ? "Editar Máquina" : "Cadastrar Máquina"}</h3>
-
             <form onSubmit={salvarMaquina}>
               <div className="form-group">
                 <input
@@ -295,7 +322,6 @@ export default function Gerenciamento() {
                   required
                 />
               </div>
-
               <div className="form-group">
                 <input
                   type="date"
@@ -304,7 +330,6 @@ export default function Gerenciamento() {
                   required
                 />
               </div>
-
               <div className="form-group">
                 <select
                   value={form.tipo}
@@ -319,22 +344,6 @@ export default function Gerenciamento() {
                   ))}
                 </select>
               </div>
-
-              {/* <div className="form-group">
-                <select
-                  value={form.sensor}
-                  onChange={(e) => setForm({ ...form, sensor: e.target.value })}
-                  required
-                >
-                  <option value="">Sensor</option>
-                  {sensoresMaquina.map((sensor) => (
-                    <option key={sensor} value={sensor}>
-                      {sensor}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-
               <div className="form-actions">
                 <button type="submit">Salvar</button>
                 <button
@@ -360,10 +369,6 @@ export default function Gerenciamento() {
           }}
         />
       )}
-
-      {/* <PontoMonitoramentoDemo /> */}
-
-      {/* <TemperaturaPorMaquina /> */}
     </div>
   );
 }

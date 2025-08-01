@@ -185,6 +185,43 @@ body {
   background-color: #004999;
 }
 
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.paginacao button {
+  padding: 6px 12px;
+  margin: 0 4px;
+  background-color: #0055aa;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.paginacao button:disabled {
+  background-color: #0055aa;
+  cursor: not-allowed;
+}
+
+.btn.secundario {
+  background-color: #0055aa;
+  color: white;
+}
+
+.btn.primario {
+  background-color: #0055aa;
+  color: white;
+}
+
+.btn.terceiro {
+  background-color: #0055aa;
+  color: white;
+}
+
 @media (max-width: 600px) {
   .filtros {
     flex-direction: column;
