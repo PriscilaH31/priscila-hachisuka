@@ -13,3 +13,5 @@ Como sem acesso a uma maquina, criado um campo para gravar a temperatura para te
 ---Criação de cadastro de pontos de monitoramento. 
 
 ---Criado token de validação para proteger as rotas e trazer apenas os dados do usuario correto. 
+
+---Paginacao ate 5 e color dos buttons.
