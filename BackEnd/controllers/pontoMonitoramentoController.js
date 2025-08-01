@@ -4,8 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 
 export const criarPonto = async (req, res) => {
   try {
-    const { nome, sensor, maquinaId, temperatura } = req.body;
+    const { nome, sensor, maquinaId, temperatura, vibracao, tipo } = req.body;
 
+    if (!["Temperatura", "Vibracao"].includes(tipo)) {
+      return res.status(400).json({ erro: "Tipo de ponto inválido." });
+    }
     const maquina = await Maquina.findById(maquinaId);
     if (!maquina) {
       return res.status(400).json({ erro: "Máquina não encontrada." });
@@ -21,12 +24,14 @@ export const criarPonto = async (req, res) => {
     // Cria novo ponto, inclui temperatura se for enviada
     const novoPonto = new PontoMonitoramento({
       nome,
+      tipo,
       sensor: {
         modelo: sensor.modelo,
-        id: uuidv4(), // id gerado no backend para o sensor
+        id: uuidv4(),
       },
       maquinaId,
-      temperatura: temperatura !== undefined ? temperatura : 0, // padrão 0 se não enviado
+      temperatura: tipo === "Temperatura" ? parseFloat(temperatura) : undefined,
+      vibracao: tipo === "Vibracao" ? parseFloat(vibracao) : undefined,
     });
 
     await novoPonto.save();
@@ -44,16 +49,24 @@ export const criarPonto = async (req, res) => {
 
 export const listarPontos = async (req, res) => {
   try {
-    const pontos = await PontoMonitoramento.find().populate("maquinaId");
+    const pontos = await PontoMonitoramento.find({
+      /* filtros */
+    })
+      .populate("maquinaId", "nome tipo") // trazer só nome e tipo da máquina
+      .exec();
 
     const pontosFiltrados = pontos.map((ponto) => ({
       id: ponto._id,
       nome: ponto.nome,
-      temperatura: ponto.temperatura ?? 0,
+      tipo: ponto.tipo, // Aqui é tipo, não nome
       maquinaId: ponto.maquinaId?._id,
       maquinaNome: ponto.maquinaId?.nome,
       tipoMaquina: ponto.maquinaId?.tipo,
-      sensorModelo: ponto.sensor.modelo,
+      sensorModelo: ponto.sensor?.modelo || "",
+
+      valor: ponto.tipo === "Temperatura" ? ponto.temperatura : ponto.vibracao,
+
+      unidade: ponto.tipo === "Temperatura" ? "°C" : "mm/s",
     }));
 
     res.json(pontosFiltrados);
@@ -66,16 +79,15 @@ export const listarPontos = async (req, res) => {
 export const atualizarPonto = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome, sensor, temperatura } = req.body;
+    const { nome, sensor, temperatura, vibracao } = req.body;
 
     const ponto = await PontoMonitoramento.findById(id);
-    if (!ponto) {
-      return res.status(404).json({ erro: "Ponto não encontrado." });
-    }
+    if (!ponto) return res.status(404).json({ erro: "Ponto não encontrado." });
 
     if (nome) ponto.nome = nome;
     if (sensor && sensor.modelo) ponto.sensor.modelo = sensor.modelo;
     if (temperatura !== undefined) ponto.temperatura = temperatura;
+    if (vibracao !== undefined) ponto.vibracao = vibracao;
 
     await ponto.save();
     res.json(ponto);

@@ -191,70 +191,91 @@ export default function Gerenciamento() {
             </tr>
           </thead>
           <tbody>
-            {maquinas.length === 0 && (
-              <tr>
-                <td colSpan="7">Nenhuma máquina encontrada.</td>
-              </tr>
-            )}
-            {maquinas.map((m) => (
-              <tr key={m._id}>
-                <td>{m.nome}</td>
-                <td>{new Date(m.data).toLocaleDateString("pt-BR")}</td>
-                <td>{m.tipo}</td>
-                <td>{m.sensor}</td>
-                <td>
-                  {m.pontos?.map((p, i) => (
-                    <div
-                      key={p._id || i}
-                      style={{
-                        display: "flex",
-                        alignItems: "center", // vertical center
-                        justifyContent: "center", // horizontal center
-                        marginBottom: 6,
-                      }}
-                    >
-                      <span>{p.nome}</span>
-                      <span
-                        style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: "50%",
-                          backgroundColor: corTemperatura(p.temperatura ?? 0),
-                          marginLeft: 8,
-                          border: "1px solid #000",
-                          display: "inline-block",
-                          // alignItems não faz efeito aqui porque span não é flex container
-                        }}
-                      />
-                      <span style={{ marginLeft: 8 }}>
-                        {typeof p.temperatura === "number"
-                          ? `${p.temperatura}°C`
-                          : "0°C"}
-                      </span>
-                    </div>
-                  ))}
-                </td>
+            {maquinas.flatMap((m) =>
+              m.pontos && m.pontos.length > 0 ? (
+                m.pontos.map((p, i) => {
+                  const valor =
+                    p.tipo === "Temperatura"
+                      ? p.temperatura ?? 0
+                      : p.vibracao ?? 0;
+                  const unidade = p.tipo === "Temperatura" ? "°C" : "mm/s";
 
-                <td>
-                  <button
-                    onClick={() => abrirModal(m)}
-                    className="editar"
-                    aria-label={`Editar máquina ${m.nome}`}
-                  >
-                    ✏️
-                  </button>
-                </td>
-                <td>
-                  <button
-                    onClick={() => excluirMaquina(m._id)}
-                    className="excluir"
-                    aria-label={`Excluir máquina ${m.nome}`}
-                  >
-                    ❌
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  return (
+                    <tr key={`${m._id}-${i}`}>
+                      <td>{m.nome}</td>
+                      <td>{new Date(m.data).toLocaleDateString("pt-BR")}</td>
+                      <td>{m.tipo}</td>
+                      <td>{p.sensor?.modelo ?? "-"}</td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginBottom: 6,
+                          }}
+                        >
+                          <span>{p.tipo}</span>
+                          <span
+                            style={{
+                              width: 14,
+                              height: 14,
+                              borderRadius: "50%",
+                              backgroundColor: corTemperatura(valor),
+                              marginLeft: 8,
+                              border: "1px solid #000",
+                              display: "inline-block",
+                            }}
+                          />
+                          <span
+                            style={{ marginLeft: 8 }}
+                          >{`${valor} ${unidade}`}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => abrirModal(m)}
+                          className="editar"
+                          aria-label={`Editar máquina ${m.nome}`}
+                        >
+                          ✏️
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => excluirMaquina(m._id)}
+                          className="excluir"
+                          aria-label={`Excluir máquina ${m.nome}`}
+                        >
+                          ❌
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr key={`${m._id}-vazio`}>
+                  <td>{m.nome}</td>
+                  <td>{new Date(m.data).toLocaleDateString("pt-BR")}</td>
+                  <td>{m.tipo}</td>
+                  <td>-</td>
+                  <td>Sem pontos</td>
+                  <td>
+                    <button onClick={() => abrirModal(m)} className="editar">
+                      ✏️
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => excluirMaquina(m._id)}
+                      className="excluir"
+                    >
+                      ❌
+                    </button>
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
@@ -299,7 +320,7 @@ export default function Gerenciamento() {
                 </select>
               </div>
 
-              <div className="form-group">
+              {/* <div className="form-group">
                 <select
                   value={form.sensor}
                   onChange={(e) => setForm({ ...form, sensor: e.target.value })}
@@ -312,7 +333,7 @@ export default function Gerenciamento() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
 
               <div className="form-actions">
                 <button type="submit">Salvar</button>

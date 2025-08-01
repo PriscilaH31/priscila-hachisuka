@@ -16,7 +16,7 @@ export const listarMaquinas = async (req, res) => {
 
     const maquinas = await Maquina.find(filtro).populate(
       "pontos",
-      "nome sensor temperatura"
+      "nome sensor tipo temperatura vibracao"
     );
     res.json(maquinas);
   } catch (err) {
@@ -43,7 +43,7 @@ export const criarMaquina = async (req, res) => {
 export const atualizarMaquina = async (req, res) => {
   try {
     const atualizada = await Maquina.findOneAndUpdate(
-      { _id: req.params.id, usuarioId: req.usuario._id }, // garante que é dele
+      { _id: req.params.id, usuario: req.user._id }, // garante que é dele
       req.body,
       { new: true }
     );
@@ -64,7 +64,7 @@ export const deletarMaquina = async (req, res) => {
   try {
     const deletada = await Maquina.findOneAndDelete({
       _id: req.params.id,
-      usuarioId: req.usuario._id,
+      usuario: req.user._id,
     });
 
     if (!deletada)
